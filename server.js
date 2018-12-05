@@ -37,10 +37,87 @@ function searchToatlong(query){
     .catch(error=>handelError(error));
 }
 
+app.get('/weather',getWeather);
+
+function Weather(day){
+  this.forecast = day.summary;
+  this.time = new Date(day.time * 1000).toDateString();
+
+}
+
+function getWeather(request, response) {
+  const url = `https://api.darksky.net/forecast/${process.env.WEATHER_API_KEY}/${request.query.data.latitude},${request.query.data.longitude}`;
+
+  superagent.get(url)
+    .then(result => {
+      const weatherSummaries = result.body.daily.data.map(day => {
+        return new Weather(day); });
+
+      response.send(weatherSummaries);
+    })
+    .catch(error=>handelError(error));
+
+}
 
 
+app.get('/yelp',getYelp);
 
+function getYelp(request,response){
 
+  const url= `https://api.yelp.com/v3/businesses/search?location=${request.query.data.latitude},${request.query.data.longitude}`;
+  superagent.get(url)
+    .set('Authorization', `Bearer ${process.env.YELP_API_KEY}`)
+    .then(result=>{
+
+      const yelpSummaries=result.body.businesses.map(item=>{
+
+        return new Yelp(item);
+      });
+      response.send(yelpSummaries);
+
+    })
+    .catch(error=>handelError(error));
+}
+
+function Yelp(item){
+  this.name=item.name;
+  this.rating=item.rating;
+  this.price=item.price;
+  this.phone=item.phone;
+  this.image_url=item.image_url;
+
+}
+
+app.get('/movies',getMovies);
+
+function getMovies(request,response){
+
+  const url= `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&query=${request.query.data.search_query}`;
+  superagent.get(url)
+
+    .then(resultupdate=>{
+
+      const movieSummaries=resultupdate.body.results.map(item=>{
+
+        return new Movie(item);
+      });
+      response.send(movieSummaries);
+
+    })
+    .catch(error=>handelError(error));
+}
+
+function Movie(item){
+  this.title=item.title;
+  this.overview=item.overview;
+  this.average_votes=item.vote_average;
+  this.total_votes=item.vote_count;
+  this.poster_path=item.poster_path;
+  this.release_date=item.release_date;
+  this.popularity=item.popularity;
+  this.released_on=item.release_data;
+
+}
 
 function handelError(error,res){
   if(res)
